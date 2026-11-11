@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 470" font-family="'Microsoft JhengHei','Noto Sans TC',sans-serif" font-size="14">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="#475569"/></marker>
+  </defs>
+  <rect width="980" height="470" fill="#ffffff"/>
+  <!-- zones -->
+  <rect x="225" y="20" width="440" height="300" rx="14" fill="#eff6ff" stroke="#93c5fd" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="245" y="46" font-weight="bold" fill="#1d4ed8">本機 Docker Compose(放大量原始資料)</text>
+  <rect x="705" y="20" width="255" height="300" rx="14" fill="#f0fdf4" stroke="#86efac" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="725" y="46" font-weight="bold" fill="#15803d">雲端免費 Postgres(只放精華)</text>
+  <!-- sources -->
+  <rect x="20" y="70" width="170" height="80" rx="10" fill="#fff7ed" stroke="#fb923c" stroke-width="2"/>
+  <text x="105" y="102" text-anchor="middle" font-weight="bold">GH Archive</text>
+  <text x="105" y="124" text-anchor="middle" font-size="12">每小時一包事件紀錄</text>
+  <rect x="20" y="210" width="170" height="80" rx="10" fill="#fff7ed" stroke="#fb923c" stroke-width="2"/>
+  <text x="105" y="242" text-anchor="middle" font-weight="bold">GitHub API</text>
+  <text x="105" y="264" text-anchor="middle" font-size="12">每日替專案拍「名片」</text>
+  <!-- local boxes -->
+  <rect x="245" y="70" width="180" height="80" rx="10" fill="#fff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="335" y="100" text-anchor="middle" font-weight="bold">raw 原始層</text>
+  <text x="335" y="122" text-anchor="middle" font-size="12">JSONB 原樣收下,不改</text>
+  <rect x="245" y="210" width="180" height="80" rx="10" fill="#fff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="335" y="240" text-anchor="middle" font-weight="bold">raw 專案快照</text>
+  <text x="335" y="262" text-anchor="middle" font-size="12">每天一份原樣名片</text>
+  <rect x="460" y="130" width="185" height="100" rx="10" fill="#fff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="552" y="162" text-anchor="middle" font-weight="bold">staging 整理層</text>
+  <text x="552" y="184" text-anchor="middle" font-size="12">拆欄位、去重、標記機器人</text>
+  <text x="552" y="204" text-anchor="middle" font-size="12">資料品質檢查在這裡把關</text>
+  <!-- cloud boxes -->
+  <rect x="725" y="70" width="215" height="110" rx="10" fill="#fff" stroke="#22c55e" stroke-width="2"/>
+  <text x="832" y="100" text-anchor="middle" font-weight="bold">warehouse 倉儲層</text>
+  <text x="832" y="124" text-anchor="middle" font-size="12">fact_event、fact_repo_daily</text>
+  <text x="832" y="144" text-anchor="middle" font-size="12">dim_repo(SCD2)、dim_actor</text>
+  <text x="832" y="164" text-anchor="middle" font-size="12">dim_date、dim_event_type</text>
+  <rect x="725" y="210" width="215" height="80" rx="10" fill="#fff" stroke="#22c55e" stroke-width="2"/>
+  <text x="832" y="240" text-anchor="middle" font-weight="bold">dq_results 品質紀錄</text>
+  <text x="832" y="262" text-anchor="middle" font-size="12">每次檢查的成績單</text>
+  <!-- arrows -->
+  <path d="M190 110H243" stroke="#475569" stroke-width="2" fill="none" marker-end="url(#a)"/>
+  <path d="M190 250H243" stroke="#475569" stroke-width="2" fill="none" marker-end="url(#a)"/>
+  <path d="M425 110L458 150" stroke="#475569" stroke-width="2" fill="none" marker-end="url(#a)"/>
+  <path d="M425 250L458 210" stroke="#475569" stroke-width="2" fill="none" marker-end="url(#a)"/>
+  <path d="M645 170H723" stroke="#475569" stroke-width="2" fill="none" marker-end="url(#a)"/>
+  <path d="M832 180V208" stroke="#475569" stroke-width="2" fill="none" marker-end="url(#a)"/>
+  <!-- airflow -->
+  <rect x="20" y="345" width="940" height="46" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="40" y="373" font-weight="bold">Airflow 每小時 DAG:</text>
+  <text x="195" y="373">下載該小時檔 → 寫入 raw(重跑也不會重複)→ 整理到 staging → 載入事實表</text>
+  <rect x="20" y="403" width="940" height="46" rx="10" fill="#fde68a" stroke="#f59e0b" stroke-width="2"/>
+  <text x="40" y="431" font-weight="bold">Airflow 每日 DAG:</text>
+  <text x="195" y="431">拍 API 快照 → 更新 dim_repo(SCD2)→ 算 fact_repo_daily → 跑品質檢查,失敗就擋住下游</text>
+</svg>

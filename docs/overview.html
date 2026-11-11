@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GitHub 趨勢資料倉儲專案說明</title>
+<style>
+:root{--bg:#f8fafc;--fg:#0f172a;--muted:#475569;--card:#ffffff;--line:#e2e8f0;--accent:#2563eb;--ok:#15803d;--okbg:#dcfce7;--bad:#b91c1c;--badbg:#fee2e2;--note:#fef3c7}
+@media (prefers-color-scheme:dark){:root{--bg:#0f172a;--fg:#e2e8f0;--muted:#94a3b8;--card:#1e293b;--line:#334155;--accent:#60a5fa;--ok:#86efac;--okbg:#14532d;--bad:#fca5a5;--badbg:#7f1d1d;--note:#422006}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:'Microsoft JhengHei','Noto Sans TC',system-ui,sans-serif;line-height:1.75}
+main{max-width:920px;margin:0 auto;padding:24px 16px 80px}
+h1{font-size:1.9rem;margin:.2em 0}
+h2{font-size:1.4rem;margin:2.2em 0 .6em;padding-bottom:.3em;border-bottom:2px solid var(--line)}
+h3{font-size:1.1rem;margin:1.4em 0 .4em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:14px 0}
+.note{background:var(--note);border-radius:10px;padding:12px 16px;margin:14px 0}
+.tag{display:inline-block;font-size:.78rem;background:var(--line);border-radius:6px;padding:0 8px;margin-right:6px}
+img.fig{width:100%;height:auto;background:#fff;border:1px solid var(--line);border-radius:10px;margin:10px 0}
+table{width:100%;border-collapse:collapse;font-size:.93rem;background:var(--card)}
+th,td{border:1px solid var(--line);padding:8px 10px;vertical-align:top;text-align:left}
+th{background:var(--line)}
+pre{background:#0f172a;color:#e2e8f0;padding:14px;border-radius:10px;overflow:auto;font-size:.85rem;line-height:1.5}
+code{background:var(--line);padding:0 5px;border-radius:4px}
+pre code{background:none;padding:0}
+details{background:var(--card);border:1px solid var(--line);border-radius:10px;margin:10px 0;padding:10px 16px}
+summary{cursor:pointer;font-weight:bold}
+.muted{color:var(--muted);font-size:.9rem}
+.q{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin:16px 0}
+.q p{margin:.2em 0 .6em;font-weight:bold}
+.opt{display:block;width:100%;text-align:left;font:inherit;color:inherit;background:transparent;border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin:6px 0;cursor:pointer}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt.right{background:var(--okbg);border-color:var(--ok)}
+.opt.wrong{background:var(--badbg);border-color:var(--bad)}
+.why{display:none;margin-top:8px;padding:10px 12px;border-left:4px solid var(--accent);background:var(--bg)}
+#score{position:sticky;top:0;background:var(--bg);padding:8px 0;font-weight:bold;z-index:2}
+@media (max-width:600px){table{font-size:.82rem}}
+</style>
+</head>
+<body>
+<main>
+
+<h1>GitHub 趨勢資料倉儲專案:新手說明書</h1>
+<p class="muted">這份文件寫給「完全不認識這份資料」的人。內容是<strong>目前的規劃</strong>(專案尚未開始寫程式),文中標「已查證」的數字來自 2026-11-07 的實測或官方頁面。最後有 12 題選擇題,作答後才會顯示答案與原因。</p>
+
+<h2>1. 這個專案到底在做什麼?</h2>
+<div class="card">
+<p><strong>一句話:</strong>把全世界程式設計師在 GitHub 上的一舉一動(按星星、複製專案、上傳程式),每小時收集起來,整理成一本「查得快、查得準、不會算錯」的帳本,回答「<strong>哪些程式語言、哪些專案最近成長最快?</strong>」</p>
+<h3>用早餐店來想</h3>
+<table>
+<tr><th>早餐店</th><th>這個專案</th></tr>
+<tr><td>收銀機每一筆交易的流水帳</td><td><code>fact_event</code>:每一次「按星星、Fork、推送程式」是一筆</td></tr>
+<tr><td>每天打烊盤點一次庫存</td><td><code>fact_repo_daily</code>:每個專案每天一筆數字(星星數、Fork 數)</td></tr>
+<tr><td>菜單、會員名片</td><td>維度表(dim_*):專案名片、帳號、日曆、事件種類</td></tr>
+<tr><td>菜單改價,但要記得「以前賣多少」</td><td>SCD2:專案的名片改了,保留舊版本</td></tr>
+<tr><td>倉庫裡堆滿的原始進貨單</td><td>raw 原始層:先原樣收下,不改</td></tr>
+</table>
+</div>
+<div class="note"><strong>為什麼做這個?</strong>你要找資料工程師(DE)的工作。DE 的日常就是「把亂七八糟的資料,穩定、正確、可重跑地變成能分析的帳本」。這個專案刻意把面試會被深挖的東西都放進去:星狀模型、SCD2、冪等、增量載入、資料品質、排程。</div>
+
+<h2>2. 資料介紹:我們到底吃什麼資料?</h2>
+<h3>資料來源 A:GH Archive(每小時的「監視器紀錄」)</h3>
+<p>GitHub 上每發生一件事(有人按星星、有人 Fork 別人的專案、有人推送程式),都會被記成一筆<strong>事件</strong>。GH Archive 是一個公開網站,把每個小時的事件打包成一個壓縮檔,網址格式像 <code>2026-10-20-12.json.gz</code>(2026 年 10 月 20 日 12 點)。就像便利商店把每小時的監視器畫面存成一個檔案,任何人都能下載。</p>
+<pre><code>{ "id": "事件編號",
+  "type": "WatchEvent",            // 有人按了星星
+  "actor": { "login": "某個帳號" },
+  "repo":  { "id": 42, "name": "某人/某專案", "url": "..." },
+  "created_at": "2026-10-20T12:03:11Z" }
+// 這是簡化示意。已查證:頂層 repo 只有 id、name、url,
+// 沒有「程式語言」或「專案描述」。</code></pre>
+<h3>資料來源 B:GitHub API(專案的「名片」)</h3>
+<p>事件裡看不到專案是用什麼語言寫的,所以我們每天向 GitHub 查詢一次「專案名片」:程式語言、描述、主題標籤、是否封存、授權、擁有者。已查證:有登入金鑰(PAT)時每小時最多 5000 次請求,沒登入只有 60 次。</p>
+<h3>已查證的數字(2026-11-07)</h3>
+<table>
+<tr><th>項目</th><th>數字</th><th>來源 / 備註</th></tr>
+<tr><td>GH Archive 單一小時檔大小</td><td>約 10~13 MB(壓縮後)</td><td>實測 2026-10-20 的 0、12、18 時三個檔</td></tr>
+<tr><td>單一小時事件數</td><td>約 5.8 萬筆</td><td>只實測 2026-10-20 12 時一檔,沒有全天數字</td></tr>
+<tr><td>下載是否需註冊</td><td>不需要</td><td>實測 5 次請求都成功;官網沒寫限速,<strong>是否有隱性限速未證實</strong></td></tr>
+<tr><td>Neon 免費方案</td><td>1 GB 儲存,閒置 5 分鐘就休眠</td><td>neon.com 官方方案頁</td></tr>
+<tr><td>Supabase 免費方案</td><td>500 MB 儲存,閒置 1 週暫停</td><td>supabase.com/pricing</td></tr>
+<tr><td>GitHub API 額度</td><td>登入 5000 次/小時;未登入 60 次/小時</td><td>docs.github.com</td></tr>
+</table>
+<div class="note"><strong>一個小插曲:</strong>設計討論時我曾誤以為「GH Archive 一天就好幾 GB」,實測後發現一個小時才約 10~13 MB。結論(原始資料放本機、雲端只放精華)仍然成立,但理由改成「雲端免費額度放不下 30 天的原始資料」。</div>
+
+<h2>3. 整體架構</h2>
+<img class="fig" src="svg/arch.svg" alt="架構圖:資料來源到本機 raw、staging,再到雲端倉儲層,下方為兩條 Airflow 排程">
+<h3>怎麼讀這張圖?(像一條食品工廠生產線)</h3>
+<table>
+<tr><th>站</th><th>白話</th><th>生活比喻</th></tr>
+<tr><td>raw 原始層</td><td>下載到的 JSON 原封不動存起來</td><td>進貨先放倉庫,不拆封;出錯時能回頭查「當初收到什麼」</td></tr>
+<tr><td>staging 整理層</td><td>拆成欄位、去掉重複、標出機器人帳號</td><td>洗菜、切菜</td></tr>
+<tr><td>warehouse 倉儲層</td><td>最終給人查詢的星狀模型</td><td>擺上貨架的成品</td></tr>
+<tr><td>dq_results</td><td>每次品質檢查的成績單</td><td>品管紀錄表</td></tr>
+<tr><td>Airflow</td><td>排程員,到時間就叫各站開工、失敗會重試</td><td>工廠的排班主管</td></tr>
+</table>
+<p>兩條排程為什麼分開?事件每小時都有新的,所以<strong>每小時</strong>處理;專案名片一天拍一次就夠,拍太勤既浪費額度,又看不到變化。</p>
+
+<h2>4. 資料怎麼建模?</h2>
+<img class="fig" src="svg/star.svg" alt="星狀模型:兩張事實表與四張維度表">
+<h3>星狀模型是什麼?</h3>
+<p>把「發生的事」放中間(事實表),把「這件事的背景資訊」放四周(維度表),畫起來像星星。好處:查詢時只要「中間 JOIN 四周」,簡單又快。就像發票(事實)上只寫商品編號,商品名稱、價格都去商品目錄(維度)查。</p>
+<h3>SCD1 與 SCD2:名片改了怎麼辦?</h3>
+<table>
+<tr><th></th><th>SCD1:直接覆蓋</th><th>SCD2:保留舊版本</th></tr>
+<tr><td>生活比喻</td><td>手機通訊錄,朋友換號碼就改掉</td><td>戶籍資料,搬家要留「以前住哪、住到何時」</td></tr>
+<tr><td>什麼時候用</td><td>舊值沒有分析價值(帳號改名)</td><td>舊值會影響分析結論(專案從 Python 改標成 Rust)</td></tr>
+<tr><td>本專案</td><td><code>dim_actor</code></td><td><code>dim_repo</code></td></tr>
+</table>
+<img class="fig" src="svg/scd2.svg" alt="SCD2 時間軸範例">
+<div class="note"><strong>盲點:回補的事件沒有「當時」的名片。</strong>我們要回補 30 天事件,但第一次拍名片是今天。解法:第一版名片的起點設成「開放起點」,舊事件先套這一版,並在事實表打上 <code>is_backdated</code> 旗標,代表「屬性是近似的」,不假裝它很精準。</div>
+
+<h2>5. 每個決定的 Why</h2>
+<p class="muted">每一項都附「放棄了什麼」,方便你面試時回答「為什麼不選另一個」。</p>
+
+<details open><summary>① 為什麼選 GH Archive + GitHub API?</summary>
+<p><strong>Why:</strong>想練 SCD2,資料就得有「會隨時間變的東西」。GH Archive 每小時更新,天然適合練增量與冪等;專案名片會變,可練 SCD2;公開下載,沒有反爬蟲或 IP 封鎖;原始是巢狀 JSON,也能自然談 NoSQL。<br>
+<strong>放棄:</strong>內政部實價登錄(資料髒、在地好懂,但沒有會變的維度,SCD2 很牽強);重用你的職缺爬蟲資料(雲端會被封,量太小)。</p></details>
+
+<details><summary>② 為什麼本機 Docker Compose + 免費雲端 Postgres?</summary>
+<p><strong>Why:</strong>Airflow 吃記憶體,免費雲端主機跑不穩;但全本機又沒有雲端經驗可寫。折衷:排程和重活在本機,成品放雲端,順便練連線與機密管理。<br>
+<strong>放棄:</strong>全本機(雲端經驗薄);Oracle 免費 VM 全上雲(額度不穩、維運花時間)。</p></details>
+
+<details><summary>③ 為什麼 raw 放本機,雲端只放倉儲層?</summary>
+<p><strong>Why:</strong>雲端免費額度只有 500 MB~1 GB,放不下 30 天原始資料。這也很像真實公司:原始資料便宜存放,精華才進昂貴的倉儲。<br>
+<strong>放棄:</strong>只抓少量樣本全放雲端(量太小,說服力弱);改放 S3/R2 物件儲存(多一個服務,也跟 JSONB 決策衝突)。</p></details>
+
+<details><summary>④ NoSQL 的角色為什麼只在 raw 層?</summary>
+<p><strong>Why:</strong>倉儲要的是「固定欄位、可 JOIN、可驗證」,這正是關聯式資料庫的強項。NoSQL 的長處是「資料形狀常變、先收下再說」,正好對應 raw 層。我們用 Postgres 的 JSONB 欄位就能做到,少維護一個服務,並寫一份 JSONB 與 MongoDB 的取捨文件。<br>
+<strong>放棄:</strong>另加 MongoDB(像為了用而用);完全不放(違背「做中學」)。</p></details>
+
+<details><summary>⑤ 為什麼有兩張事實表?</summary>
+<p><strong>Why:</strong>流水帳(事件)與每日盤點(快照)是兩種不同性質的資料。事件可以直接加總;快照裡的「星星總數」不能跨天相加(今天 100、明天 105,不是 205),叫「半可加」。兩張都做,才能講清楚這個概念。<br>
+<strong>放棄:</strong>只做事件(少了快照觀念);只做快照(丟掉事件細節,也失去大量增量載入的展示)。</p></details>
+
+<details><summary>⑥ 為什麼 dim_repo 用 SCD2、dim_actor 用 SCD1?</summary>
+<p><strong>Why:</strong>專案的語言、描述會影響「哪個語言在成長」的結論,舊值有價值;帳號改名沒有分析價值,追歷史只是增加複雜度,面試也答不出「為什麼要追」。<br>
+<strong>放棄:</strong>兩個都 SCD2(看似完整但無理由);只有 dim_repo(星狀模型太單薄)。</p></details>
+
+<details><summary>⑦ SCD2 的資料從哪來?</summary>
+<p><strong>Why:</strong>事件裡幾乎沒有專案名片的資料,所以每天呼叫 API 拍快照,真實變化慢慢累積。但幾週內真的會變的專案很少,所以單元測試另用<strong>明確標示為合成</strong>的變更資料驗證邏輯。<br>
+<strong>放棄:</strong>從事件推導(能推的變化極少,SCD2 幾乎空轉);全部用合成資料(面試被問「真實資料為何不變」會露餡)。</p></details>
+
+<details><summary>⑧ 為什麼只追蹤活躍度 Top 2000 的專案?</summary>
+<p><strong>Why:</strong>每天會出現數十萬個專案,全部追蹤會超過 API 額度,雲端也放不下。從自己的事件資料算出最活躍的 2000 個,每天 2000 次請求遠低於 5000 次/小時上限,這個挑選本身也是資料驅動的設計。<br>
+<strong>放棄:</strong>手選 200 個知名專案(變化少、有倖存者偏差);追全部(不可行)。</p></details>
+
+<details><summary>⑨ 冪等是什麼?為什麼這樣設計?</summary>
+<p><strong>白話:</strong>電梯按鈕按十次,效果跟按一次一樣。排程失敗重跑時,重跑同一個小時不該多出重複資料或漏資料。<br>
+<strong>Why:</strong>raw 層用事件編號判斷「收過了就略過」;事實表則把「某小時」整段刪掉再重新寫入,而且放在同一個交易裡,中途失敗就整段退回,不會留下半套資料。這段由你手寫。<br>
+<strong>放棄:</strong>每筆都 MERGE(大表慢,上游撤回事件時清不掉舊資料);每次全部重載(失去增量的意義)。</p></details>
+
+<details><summary>⑩ 為什麼排程拆成每小時與每日兩條?</summary>
+<p><strong>Why:</strong>事件和名片的更新節奏不同,拆開才能各自重試、各自補跑(catchup)。<br>
+<strong>放棄:</strong>全塞進每小時 DAG(每小時重跑 API 與 SCD2,浪費額度);全塞進每日 DAG(失去小時級重跑的粒度)。</p></details>
+
+<details><summary>⑪ 資料治理與品質怎麼做?</summary>
+<p><strong>Why:</strong>手寫檢查(有沒有空值、有沒有重複、事實表的專案編號在維度表找不找得到、資料新不新鮮、筆數對不對得上),結果寫進 <code>dq_results</code>,失敗就擋住下游,再加欄位血緣與資料字典文件。手寫才能在面試說清楚每條規則為什麼存在。<br>
+<strong>放棄:</strong>Great Expectations(設定重、會藏住邏輯,履歷多一個關鍵字);只做檢查不記錄(沒有可審計紀錄)。</p></details>
+
+<details><summary>⑫ 為什麼先寫純 SQL,再用 dbt 對照?</summary>
+<p><strong>Why:</strong>dbt 的 snapshot 會自動產生 SCD2,等於把你最該親手理解的邏輯藏起來。先手寫,再用 dbt 重做同一張維度做比較,面試談 dbt 才有根據。<br>
+<strong>放棄:</strong>一開始就用 dbt(學習目標落空);完全不碰 dbt(多數 DE 職缺都寫 dbt)。</p></details>
+
+<details><summary>⑬ K8s 和 MLOps 為什麼只做「設計、未實作」?</summary>
+<p><strong>Why:</strong>這兩項不在你的最高優先,做到一半的實作反而容易在面試被追問露餡。履歷與 README 明確區分「已實作」和「僅設計」,誠實回答最安全。完成核心後,再決定要不要用 kind 在本機真的跑一次。<br>
+<strong>放棄:</strong>現在就實作(拖慢核心進度);完全不提(第 6 項落空)。</p></details>
+
+<details><summary>⑭ 你手寫什麼、AI 寫什麼?</summary>
+<p><strong>Why:</strong>手寫的是「寫錯會被追問」的核心:SCD2 merge SQL、冪等載入、資料品質檢查。AI 負責 Docker、DAG 骨架、下載與解析等樣板,並當挑戰者與 reviewer。這也是在練「你出需求、定架構、做驗收」的協作方式。</p></details>
+
+<details><summary>⑮ 里程碑與版本控制</summary>
+<p><strong>Why:</strong>順序是 M1 raw 冪等載入 → M2 星狀模型+SCD2 → M3 資料品質 → M4 Airflow → M5 雲端+文件 → M6 dbt 對照。把最高優先、最常被追問的先做完,中途被打斷也有成果。每個里程碑完成就 commit,並維護 <code>RESUME.md</code>。專案已完成 <code>git init</code>,之後用 GitHub Actions 跑 pytest。文件分工:README 用英文(外商也看得懂),設計與決策文件用中文(方便你備課)。</p></details>
+
+<h2>6. 必須誠實面對的限制</h2>
+<table>
+<tr><th>限制</th><th>面試怎麼說</th></tr>
+<tr><td>SCD2 的真實變化會很少</td><td>真實資料靠每日快照慢慢累積;邏輯正確性由標示為合成的測試資料驗證</td></tr>
+<tr><td>回補事件的專案屬性是近似的</td><td>用 <code>is_backdated</code> 標出來,文件寫明限制,而不是假裝精準</td></tr>
+<tr><td>GH Archive 是否限速未證實</td><td>M1 先小規模試下載再放大</td></tr>
+<tr><td>K8s、MLOps 只有設計</td><td>履歷與 README 標明「設計、未實作」</td></tr>
+<tr><td>免費方案額度可能改變</td><td>已查證日期為 2026-11-07,部署前再確認一次</td></tr>
+</table>
+
+<h2>7. 名詞小辭典</h2>
+<table>
+<tr><th>名詞</th><th>一句白話</th></tr>
+<tr><td>資料倉儲</td><td>專門為「分析與報表」整理過的資料庫</td></tr>
+<tr><td>事實表 / 維度表</td><td>發生的事(流水帳)/ 事情的背景資料(名片)</td></tr>
+<tr><td>星狀模型</td><td>事實表在中間、維度表在四周的設計</td></tr>
+<tr><td>SCD</td><td>維度資料變了該怎麼處理(1=覆蓋、2=保留舊版本)</td></tr>
+<tr><td>ETL</td><td>抽出、轉換、載入:把資料從來源搬進倉儲的整個流程</td></tr>
+<tr><td>冪等</td><td>同一個動作重做多次,結果和做一次一樣</td></tr>
+<tr><td>增量 / 全量</td><td>只處理新增的部分 / 每次整批重做</td></tr>
+<tr><td>回補(backfill)</td><td>補抓過去錯過的資料</td></tr>
+<tr><td>Airflow / DAG</td><td>排程工具 / 一條有先後順序的工作流程</td></tr>
+<tr><td>JSONB</td><td>Postgres 裡存 JSON 的欄位型別,可以直接查裡面的內容</td></tr>
+<tr><td>半可加</td><td>可以跨專案加總,但不能跨時間加總的數字(如星星總數)</td></tr>
+</table>
+
+<h2>8. 選擇題:確認你真的懂了</h2>
+<div id="score">已作答 0 / 12 題,答對 0 題</div>
+<div id="quiz"></div>
+
+</main>
+<script>
+const Q=[
+{q:"為什麼這個專案選 GH Archive,而不是隨便一份 Kaggle 靜態資料集?",o:["因為 Kaggle 要付費","因為專案需要「會隨時間變化」的資料來練 SCD2、增量載入,而且 GH Archive 公開、不會被封鎖","因為 GH Archive 的資料量最小","因為 Kaggle 沒有 JSON 資料"],a:1,w:"想練 SCD2 就需要會變的維度;GH Archive 每小時更新,公開下載不會被封。與價格和大小無關。"},
+{q:"fact_event 裡的「一筆資料」代表什麼?",o:["一個專案","一個帳號","一次事件(例如一次按星星)","一天的統計"],a:2,w:"fact_event 是事件級事實表,像收銀機的一筆交易。「一個專案×一天」是 fact_repo_daily。"},
+{q:"哪個情境最像 SCD2?",o:["朋友換手機號碼,你把通訊錄直接改掉","戶政資料:搬家後保留「以前住哪、住到何時」","把舊照片刪掉換新的","每天重抄一份新名單"],a:1,w:"SCD2 保留舊版本並標示有效期間;直接覆蓋是 SCD1。"},
+{q:"dim_actor(帳號)為什麼用 SCD1 而不是 SCD2?",o:["因為帳號比專案少","因為 SCD2 在 Postgres 做不到","帳號改名沒有分析價值,追歷史只增加複雜度","因為 GitHub 不允許改帳號"],a:2,w:"選 SCD 類型看的是「舊值對分析有沒有價值」,不是看資料量。"},
+{q:"排程失敗後重跑同一個小時 4 次,fact_event 裡該小時的資料應該是?",o:["4 倍的筆數","只有最後一次的一份,和跑 1 次一模一樣","全部清空","不一定"],a:1,w:"這就是冪等:先在同一個交易內刪掉該小時分區再寫入,重跑多少次結果都相同。"},
+{q:"為什麼大量原始資料放本機,而不是全部放雲端?",o:["雲端比較慢","雲端免費額度只有 500 MB~1 GB,放不下 30 天原始資料","雲端不支援 JSON","因為本機比較安全"],a:1,w:"已查證 Neon 1 GB、Supabase 500 MB。原始資料放本機、精華放雲端,也貼近真實公司做法。"},
+{q:"事實表裡的 is_backdated = 真,代表什麼?",o:["這筆資料壞掉了","這筆事件發生時還沒有名片,連到的專案屬性只是近似","這筆事件被重複載入","這個專案已被刪除"],a:1,w:"回補的舊事件早於第一次名片快照,所以套用最早版本並標示近似,而不是假裝精準。"},
+{q:"為什麼先手寫純 SQL 的 SCD2,最後才用 dbt snapshot 對照?",o:["dbt 要付費","dbt 不支援 Postgres","dbt 會自動產生 SCD2,把你最該親手理解的邏輯藏起來","純 SQL 一定比 dbt 快"],a:2,w:"目標是「理解並能被追問」。先手寫懂原理,再用 dbt 比較,談 dbt 才有根據。"},
+{q:"履歷上關於 K8s 與 MLOps,正確的寫法是?",o:["寫成已在生產環境使用","寫成「設計、未實作」,與已實作的功能明確區分","完全不提","寫成熟悉,面試再說"],a:1,w:"誠實區分「做過」和「只設計」,面試被追問時才不會露餡。"},
+{q:"資料品質檢查失敗時,應該怎麼處理?",o:["忽略,繼續跑","只寫一行 log","結果寫進 dq_results,並擋住下游不繼續載入","把整個資料庫清空"],a:2,w:"壞資料往下游流會污染報表。要記錄結果(可審計)並阻擋下游。"},
+{q:"為什麼只追蹤活躍度 Top 2000 的專案,而不是所有出現過的專案?",o:["全部追蹤超過 API 額度,也放不下雲端免費儲存","因為 2000 是 GitHub 規定的數字","因為其他專案不存在","因為這樣能讓 SCD2 變化更多"],a:0,w:"每天出現數十萬個專案;Top 2000 每天只要 2000 次請求,遠低於 5000 次/小時上限,又是資料驅動挑出來的。"},
+{q:"NoSQL(這裡用 Postgres JSONB)在本專案最合理的位置是?",o:["倉儲層的事實表","raw 原始層:原樣收下形狀可能變動的 JSON","dq_results","dim_date"],a:1,w:"倉儲層要固定欄位、可 JOIN;raw 層先收下、形狀常變,才是 NoSQL 的強項。"}
+];
+const box=document.getElementById('quiz'),sc=document.getElementById('score');let done=0,ok=0;
+Q.forEach((x,i)=>{
+  const d=document.createElement('div');d.className='q';
+  d.innerHTML=`<p>Q${i+1}. ${x.q}</p>`;
+  const why=document.createElement('div');why.className='why';why.textContent=x.w;
+  const btns=x.o.map((t,j)=>{const b=document.createElement('button');b.className='opt';b.textContent=String.fromCharCode(65+j)+'. '+t;
+    b.onclick=()=>{
+      btns.forEach(e=>e.disabled=true);
+      btns[x.a].classList.add('right');
+      if(j!==x.a)b.classList.add('wrong');else ok++;
+      why.style.display='block';why.textContent=(j===x.a?'答對了。':'答錯了,正確答案是 '+String.fromCharCode(65+x.a)+'。')+x.w;
+      done++;sc.textContent=`已作答 ${done} / ${Q.length} 題,答對 ${ok} 題`;
+    };d.appendChild(b);return b;});
+  d.appendChild(why);box.appendChild(d);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 430" font-family="'Microsoft JhengHei','Noto Sans TC',sans-serif" font-size="14">
+  <rect width="900" height="430" fill="#ffffff"/>
+  <g stroke="#94a3b8" stroke-width="2">
+    <path d="M450 150L200 70"/><path d="M450 150L700 70"/><path d="M450 150L200 240"/><path d="M450 150L700 240"/>
+    <path d="M450 340L200 240" stroke-dasharray="5 4"/><path d="M450 340L700 70" stroke-dasharray="5 4"/>
+    <path d="M450 150V300"/>
+  </g>
+  <!-- facts -->
+  <rect x="340" y="110" width="220" height="80" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="450" y="142" text-anchor="middle" font-weight="bold">fact_event</text>
+  <text x="450" y="164" text-anchor="middle" font-size="12">一筆 = 一次事件(星標、Fork、推送…)</text>
+  <text x="450" y="182" text-anchor="middle" font-size="12">量大,像「收銀機流水帳」</text>
+  <rect x="340" y="300" width="220" height="80" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="450" y="332" text-anchor="middle" font-weight="bold">fact_repo_daily</text>
+  <text x="450" y="354" text-anchor="middle" font-size="12">一筆 = 一個專案 × 一天</text>
+  <text x="450" y="372" text-anchor="middle" font-size="12">像「每天晚上盤點庫存」</text>
+  <!-- dims -->
+  <rect x="90" y="40" width="220" height="60" rx="12" fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
+  <text x="200" y="68" text-anchor="middle" font-weight="bold">dim_repo(SCD2)</text>
+  <text x="200" y="88" text-anchor="middle" font-size="12">專案名片,會留歷史版本</text>
+  <rect x="590" y="40" width="220" height="60" rx="12" fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
+  <text x="700" y="68" text-anchor="middle" font-weight="bold">dim_date</text>
+  <text x="700" y="88" text-anchor="middle" font-size="12">日曆:週幾、第幾週、月份</text>
+  <rect x="90" y="210" width="220" height="60" rx="12" fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
+  <text x="200" y="238" text-anchor="middle" font-weight="bold">dim_actor(SCD1)</text>
+  <text x="200" y="258" text-anchor="middle" font-size="12">帳號,改名就覆蓋;標機器人</text>
+  <rect x="590" y="210" width="220" height="60" rx="12" fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
+  <text x="700" y="238" text-anchor="middle" font-weight="bold">dim_event_type</text>
+  <text x="700" y="258" text-anchor="middle" font-size="12">事件種類對照表</text>
+  <text x="20" y="410" font-size="12" fill="#64748b">實線 = fact_event 的連線;虛線 = fact_repo_daily 的連線(連 dim_repo 與 dim_date)</text>
+</svg>
