@@ -85,7 +85,7 @@
 | 時程約 4 週:M1–M5 必交,M6 為加分題 | 使用者決定,2026-11-11 |
 | 來源只保留 30 天:2026-10-14 12 時的資料查得到,2026-10-12 12 時已回空 | 實測,2026-11-11 |
 | 來源會限速:每 2 秒一次請求,79 次中有 6 次回 429,`Retry-After` 約 26–32 秒。當時的 User-Agent 沒有聯絡方式 | 實測,2026-11-11 |
-| Wikimedia 依 User-Agent 是否合規、是否登入分級限速;合規的 User-Agent 需含聯絡方式(網址或 email)。各級的確切數字未確認 | [mediawiki.org 的 Rate limits 頁](https://www.mediawiki.org/wiki/Wikimedia_APIs/Rate_limits)與相關討論的搜尋摘要,2026-11-12;未逐頁核對原文 |
+| Wikimedia 分級限速(每分鐘請求數,Action API 也適用):無識別資訊 10;合規 User-Agent、未登入 200;登入的新帳號 200;登入的資深編輯 2,000。合規 User-Agent 格式為 `<client>/<version> (<聯絡方式>)`,聯絡方式為網址或 email。建議同時請求不超過 3 個、遇 429 遵守 `Retry-After`,沒有該標頭時至少等 5 秒或指數退避。本專案未登入、一次一個請求,適用 200 次/分。該頁註明規則「2026 年新訂,可能調整」 | [Rate limits 頁](https://www.mediawiki.org/wiki/Wikimedia_APIs/Rate_limits)(2026-11-08 版)與 [User-Agent 政策](https://foundation.wikimedia.org/wiki/Policy:Wikimedia_Foundation_User-Agent_Policy)(2026-03-27 版),由 subagent 讀取原文後摘要,2026-11-12 |
 | 雲端儲存:Neon Free 1 GB/專案,閒置 5 分鐘 suspend、連線時自動喚醒 | 官方方案頁,查證於 2026-11-07;部署前再確認 |
 | 環境:Windows 10;Docker 29.7.2、Docker Compose v5.5.0 | 本機 `docker --version` 實測,2026-11-11 |
 
@@ -159,7 +159,7 @@ M1–M4 所有層都在同一個本機 Postgres,以 schema 區分;M5 把 warehou
 | `dim_date` | 靜態 | `date_key`、日期、週幾、週次、月份 |
 | `dim_wiki` | 靜態 | `wiki_key`、代碼(`zhwiki`)、語言、網域 |
 
-- 所有未登入的編輯對應到 `dim_user` 的同一列「匿名」,不儲存 IP 位址。來源目前如何表示未登入編輯(IP 或臨時帳號)未驗證,M1 確認。
+- 所有未登入的編輯對應到 `dim_user` 的同一列「匿名」,不儲存 IP 位址。來源以臨時帳號表示未登入編輯:`user` 形如 `~2026-59699-03`、`userid` 非 0、另帶 `temp: true`;2026-11-12 12 時的 1,709 筆中有 28 筆 `temp`,沒有任何一筆 `userid = 0` 或帶 `anon` 旗標(實測,2026-11-12,只量一個小時)。來源本身就不給 IP;`is_anon` 以 `temp` 旗標判定。臨時帳號要不要改成各自一列,M2 建 `dim_user` 時決定(第 14 節)。
 - 日期一律以 UTC 計。
 
 ### 7.3 `dim_page` 的 SCD2 規則
@@ -259,8 +259,11 @@ M1–M4 所有層都在同一個本機 Postgres,以 schema 區分;M5 把 warehou
 
 | 問題 | 何時決定 |
 |---|---|
-| Wikimedia 各級限速的確切數字;是否需要登入帳號取得較高額度 | M1 |
-| 未登入編輯在來源中的表示方式(IP 或臨時帳號) | M1 |
+| ~~Wikimedia 各級限速的確切數字;是否需要登入帳號~~ 已確認(第 5 節):不需登入,合規 User-Agent 即 200 次/分 | 2026-11-12 |
+| ~~未登入編輯在來源中的表示方式~~ 已確認(第 7.2 節):臨時帳號,帶 `temp: true` | 2026-11-12 |
+| 臨時帳號在 `dim_user` 共用一列「匿名」,或各自一列(來源不給 IP,各自一列不涉及 IP) | M2 |
+| 部分紀錄帶 `actionhidden`、`suppressed` 旗標(被隱藏的日誌),可能缺 `title` 或 `user`;staging 的非空規則要怎麼處理 | M2–M3 |
+| 回補時先把 API 回應落地成 `data/landing/` 的 gzip 檔再載入 raw(M1 為搶 30 天保留期而加,AI 提案、使用者未表態);是否列為正式的一層並寫 ADR | M1 |
 | `move` 之後,來源是否改寫舊紀錄的 `title`(影響能否加一條「事實的標題與維度版本一致」的對帳規則) | M2 |
 | 新鮮度與量異常門檻的調整 | M3 |
 | 是否加入 enwiki | M5 前 |

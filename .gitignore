@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.env
+# 落地檔與備份:資料不進版控
+data/

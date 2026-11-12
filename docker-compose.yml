@@ -1,0 +1,22 @@
+# M1:只有 Postgres。Airflow 在 M4 加入。
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: wew
+      POSTGRES_PASSWORD: wew # 僅供本機開發
+      POSTGRES_DB: wew
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # 只在資料卷第一次建立時執行;之後改 DDL 要手動套用
+      - ./sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wew -d wew"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:
