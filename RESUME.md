@@ -30,7 +30,9 @@
 ## 關鍵決策
 - 現行規格:`docs/SPEC.md` v0.2。
 - 為什麼換資料集、實測數字、替代方案:`docs/adr/0001-dataset-wikipedia-recentchanges.md`。
-- 白話版與選擇題:`docs/overview.html`。
+- 白話版與選擇題:`docs/overview.html`(尚未反映落地檔這一層)。
+- 落地檔列為正式的一層(使用者 2026-11-12 決定):`docs/adr/0002-landing-files-before-raw.md`。
+- User-Agent 聯絡方式用 repo 網址(使用者 2026-11-12 再次確認);網址尚未提供。
 
 ## 設計者自行補上、使用者未逐項表態的細節
 不同意請直接改 SPEC:
@@ -39,6 +41,5 @@
 - 不支援對較早的日子亂序重跑;需要時清空 warehouse 層,從 raw 依日序重播。
 - User-Agent 的聯絡方式用 repo 網址,不放個人 email。
 - 專案代號暫定 `wiki-edit-warehouse`。
-- (M1 新增)回補先落地成檔案再載入 raw:讓擷取不必等手寫的載入完成。SPEC 沒有這一層,待使用者決定是否保留(SPEC 第 14 節)。
 - (M1 新增)`rcprop` 多收了 `comment`、`tags`:不在 SPEC 欄位清單,但過了 30 天取不回。
 - (M1 新增)`raw_recentchange` 多一個 `rc_timestamp` 欄位(取自 payload),供 staging 以小時切分。
