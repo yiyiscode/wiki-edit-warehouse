@@ -14,8 +14,8 @@
 - M1 的兩個確認事項已寫回 SPEC:限速(第 5 節)、未登入編輯(第 7.2 節)。
 
 ## 下一步
-1. **使用者**:建 GitHub repo,把網址填進 `.env` 的 `WIKI_USER_AGENT`(範本見 `.env.example`)。
-2. **啟動回補**(有時間壓力,每晚一小時就少一小時):
+1. ~~建 GitHub repo~~ 完成(2026-11-12):https://github.com/yiyiscode/wiki-edit-warehouse ,公開,目前只有 `feat/spec` 分支(也是預設分支,還沒有 `main`)。
+2. **回補已於 2026-11-12 啟動**,輸出在 `data/backfill.log`;中斷的話重跑同一指令會接續:
    `set -a; . ./.env; set +a; PYTHONPATH=src .venv/Scripts/python -m ingest.backfill fetch`
    估計 720 小時、約 3,000–4,500 次請求,一到兩小時。
 3. **使用者手寫** `load_raw`,讓 `pytest tests/test_load_raw.py` 全過;AI 審查並挑戰。
@@ -32,7 +32,8 @@
 - 為什麼換資料集、實測數字、替代方案:`docs/adr/0001-dataset-wikipedia-recentchanges.md`。
 - 白話版與選擇題:`docs/overview.html`(尚未反映落地檔這一層)。
 - 落地檔列為正式的一層(使用者 2026-11-12 決定):`docs/adr/0002-landing-files-before-raw.md`。
-- User-Agent 聯絡方式用 repo 網址(使用者 2026-11-12 再次確認);網址尚未提供。
+- User-Agent 聯絡方式用 repo 網址(使用者 2026-11-12 再次確認);已填入 `.env`。
+- 2026-11-12 推上 GitHub 前改寫過歷史:移除 `de-skill-priority-2026-11-06.md`(本機保留、已列入 `.gitignore`),commit 信箱改為 GitHub noreply(只設在這個 repo 的 git config)。舊的 commit 雜湊已失效。
 
 ## 設計者自行補上、使用者未逐項表態的細節
 不同意請直接改 SPEC:
