@@ -1,27 +1,26 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 360" font-family="'Microsoft JhengHei','Noto Sans TC',sans-serif" font-size="14">
   <rect width="940" height="360" fill="#ffffff"/>
-  <text x="20" y="28" font-weight="bold">範例:同一個專案 repo_id=42 的時間軸(日期為舉例)</text>
+  <text x="20" y="28" font-weight="bold">範例:同一個頁面 page_id=1234 的時間軸(頁面與日期為舉例,非實測資料)</text>
   <!-- timeline -->
   <line x1="40" y1="110" x2="900" y2="110" stroke="#475569" stroke-width="3"/>
   <g fill="#475569" font-size="12" text-anchor="middle">
-    <line x1="40" y1="100" x2="40" y2="120" stroke="#475569" stroke-width="2"/><text x="40" y="140">10/08</text>
-    <line x1="330" y1="100" x2="330" y2="120" stroke="#dc2626" stroke-width="3"/><text x="330" y="140" fill="#dc2626">11/07 第一次拍名片</text>
-    <line x1="640" y1="100" x2="640" y2="120" stroke="#16a34a" stroke-width="3"/><text x="640" y="140" fill="#16a34a">11/25 描述被改了</text>
-    <line x1="900" y1="100" x2="900" y2="120" stroke="#475569" stroke-width="2"/><text x="900" y="140">今天</text>
+    <line x1="40" y1="100" x2="40" y2="120" stroke="#475569" stroke-width="2"/><text x="52" y="140">回補起點</text>
+    <line x1="560" y1="100" x2="560" y2="120" stroke="#16a34a" stroke-width="3"/><text x="560" y="140" fill="#16a34a">11/05 10:40 頁面被改名</text>
+    <line x1="900" y1="100" x2="900" y2="120" stroke="#475569" stroke-width="2"/><text x="888" y="140">今天</text>
   </g>
   <!-- events dots -->
-  <g fill="#f97316"><circle cx="90" cy="95" r="6"/><circle cx="150" cy="95" r="6"/><circle cx="230" cy="95" r="6"/><circle cx="290" cy="95" r="6"/></g>
-  <g fill="#2563eb"><circle cx="400" cy="95" r="6"/><circle cx="500" cy="95" r="6"/><circle cx="700" cy="95" r="6"/><circle cx="800" cy="95" r="6"/></g>
-  <text x="40" y="66" font-size="12" fill="#c2410c">橘點:回補的舊事件(當時沒有名片 → 先套最早版本,標「近似」)</text>
-  <text x="400" y="82" font-size="12" fill="#1d4ed8">藍點:拍名片之後的事件</text>
+  <g fill="#f97316"><circle cx="120" cy="95" r="6"/><circle cx="230" cy="95" r="6"/><circle cx="380" cy="95" r="6"/><circle cx="520" cy="95" r="6"/></g>
+  <g fill="#2563eb"><circle cx="620" cy="95" r="6"/><circle cx="720" cy="95" r="6"/><circle cx="830" cy="95" r="6"/></g>
+  <text x="40" y="66" font-size="12" fill="#c2410c">橘點:改名之前的編輯 → 連到版本 1</text>
+  <text x="600" y="66" font-size="12" fill="#1d4ed8">藍點:改名之後的編輯 → 連到版本 2</text>
   <!-- versions -->
-  <rect x="40" y="170" width="600" height="70" rx="8" fill="#ffedd5" stroke="#fb923c" stroke-width="2"/>
-  <text x="340" y="196" text-anchor="middle" font-weight="bold">版本 1(語言 Python、舊描述)</text>
-  <text x="340" y="220" text-anchor="middle" font-size="12">valid_from = 開放起點 → valid_to = 11/25,is_current = 否</text>
-  <rect x="640" y="170" width="260" height="70" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
-  <text x="770" y="196" text-anchor="middle" font-weight="bold">版本 2(新描述)</text>
-  <text x="770" y="220" text-anchor="middle" font-size="11">valid_from = 11/25 → valid_to = 空,現行版</text>
-  <text x="20" y="275" font-size="13">重點:名片「有變」才新增一列,舊那列蓋上結束日期;名片沒變就什麼都不做。</text>
-  <text x="20" y="300" font-size="13">事實表的每個事件,連到「事件發生當天有效的那一版」名片。</text>
+  <rect x="40" y="170" width="520" height="70" rx="8" fill="#ffedd5" stroke="#fb923c" stroke-width="2"/>
+  <text x="300" y="196" text-anchor="middle" font-weight="bold">版本 1:標題「台北101」,命名空間:條目</text>
+  <text x="300" y="220" text-anchor="middle" font-size="12">valid_from = 無限早 → valid_to = 11/05 10:40,is_current = 否</text>
+  <rect x="560" y="170" width="340" height="70" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text x="730" y="196" text-anchor="middle" font-weight="bold">版本 2:標題「臺北101」</text>
+  <text x="730" y="220" text-anchor="middle" font-size="12">valid_from = 11/05 10:40 → valid_to = 空,現行版</text>
+  <text x="20" y="275" font-size="13">重點:收到「改名」紀錄才新增一列,舊那列蓋上結束時間;沒有改名就什麼都不做。</text>
+  <text x="20" y="300" font-size="13">事實表的每筆編輯,連到「編輯當下有效的那一版」。所以要先更新名片,再寫入編輯。</text>
   <text x="20" y="325" font-size="13" fill="#64748b">SCD2 = Slowly Changing Dimension Type 2,「慢慢變化的維度,保留舊版本」。</text>
 </svg>

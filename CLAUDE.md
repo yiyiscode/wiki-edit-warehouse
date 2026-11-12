@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-求職作品集專案:GH Archive + GitHub API → PostgreSQL 星狀資料倉儲。目標、範圍、驗收條件以 [`docs/SPEC.md`](docs/SPEC.md) 為準;動手前先讀它和 [`RESUME.md`](RESUME.md)。
+求職作品集專案:維基百科 recentchanges API → PostgreSQL 星狀資料倉儲。目標、範圍、驗收條件以 [`docs/SPEC.md`](docs/SPEC.md) 為準;動手前先讀它和 [`RESUME.md`](RESUME.md)。
 
 ## 分工
 
