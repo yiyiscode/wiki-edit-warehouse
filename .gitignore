@@ -4,3 +4,4 @@ __pycache__/
 .env
 # 落地檔與備份:資料不進版控
 data/
+de-skill-priority-2026-11-06.md
